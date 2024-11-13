@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -35,7 +37,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -80,10 +84,14 @@ fun MainScreen(screenId: MutableState<Int>, modifier: Modifier = Modifier) {
 }
 
 
-
-
 @Composable
-fun MyRow(text: String, textState: MutableState<TextFieldValue>, errorLabel: String? = null): TextFieldValue {
+fun MyRow(
+    text: String,
+    textState: MutableState<TextFieldValue>,
+    errorLabel: String? = null,
+    passwordField: Boolean = false
+) {
+    val passwordVisibleState = remember { mutableStateOf(false) }
     TextField(
         value = textState.value,
         onValueChange = { textState.value = it },
@@ -96,9 +104,18 @@ fun MyRow(text: String, textState: MutableState<TextFieldValue>, errorLabel: Str
             if (errorLabel != null) {
                 Text(errorLabel, color = Color.Red)
             }
-        }
+        },
+        trailingIcon = {
+            if (passwordField) {
+                Icon(painter = painterResource(if (!passwordVisibleState.value) R.drawable.closed_eye else R.drawable.open_eye),
+                    contentDescription = "",
+                    modifier = Modifier.clickable(remember { MutableInteractionSource() }, null) {
+                        passwordVisibleState.value = !(passwordVisibleState.value)
+                    })
+            }
+        },
+        visualTransformation = if (passwordVisibleState.value) VisualTransformation.None else PasswordVisualTransformation()
     )
-    return textState.value
 }
 
 @Composable
@@ -183,9 +200,14 @@ fun Greeting(modifier: Modifier = Modifier, screenId: MutableState<Int>) {
             null
         }
 
-        MyRow("Поле для пароля", passwordState, errorLabel = passwordLabel)
+        MyRow("Поле для пароля", passwordState, errorLabel = passwordLabel, passwordField = true)
         Spacer(modifier = Modifier.height(18.dp))
-        MyRow("Подтвердите пароль", confirmPasswordState, errorLabel = passwordLabel)
+        MyRow(
+            "Подтвердите пароль",
+            confirmPasswordState,
+            errorLabel = passwordLabel,
+            passwordField = true
+        )
         Spacer(modifier = Modifier.height(30.dp))
 
         fun checkAllFieldsFilled(): Boolean {
